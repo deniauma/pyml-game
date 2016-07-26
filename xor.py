@@ -15,5 +15,4 @@ xor.compile(optimizer='rmsprop', loss='mse')
 
 xor.fit(inputs, outputs, nb_epoch=10000)
 print "Training done"
-print xor.evaluate(inputs, outputs)
 print xor.predict(inputs)
