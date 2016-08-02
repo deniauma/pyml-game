@@ -3,9 +3,10 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
 from keras.optimizers import sgd
+from qlearning import ExperienceReplay
 
 
-pygame.init()
+#pygame.init()
 
 size = width, height = 300, 300
 speed = [1, 1]
@@ -40,7 +41,7 @@ Qmatrix[1][2][3] = 50
 
 mousePos += moveTop
 
-screen = pygame.display.set_mode(size)
+#screen = pygame.display.set_mode(size)
 
 grid_size = 15
 hidden_size = 100
@@ -56,9 +57,11 @@ nn.add(Dense(hidden_size, activation='relu'))
 nn.add(Dense(hidden_size, activation='relu'))
 nn.add(Dense(4))
 nn.compile(sgd(lr=.2), "mse")
-nn.train_on_batch()
 
-def nnEvalSate(pos, gameMap, exploRate):
+memory = ExperienceReplay(100)
+loss = 0.
+
+def nnEvalSate(pos, gameMap, exploRate, loss):
     mouseState = np.array(pos/20)
     nnoutputs =  nn.predict(np.array([gameMap]), batch_size=1)        #nn.feed_forward(mouseState)
     nnoutputs = nnoutputs[0]                                           #nnoutputs = np.array(nn.output_layer.get_outputs())
@@ -73,18 +76,24 @@ def nnEvalSate(pos, gameMap, exploRate):
     np.copyto(newGameMap, gameMap)
     newGameMap[0][mouseState[0]][mouseState[1]] = 0
     newGameMap[0][newMouseState[0]][newMouseState[1]] = 2
-    Qstate = nnoutputs[actionId]
-    QmaxNextState = 0
-    if not np.array_equal(mouseState[0], newMouseState):
-        QmaxNextState = nn.predict(np.array([newGameMap])).max()    #nn.feed_forward(newMouseState)
-            #QmaxNextState = np.array(nn.output_layer.get_outputs()).max()
-    Qtargets = nnoutputs
-    Qtargets[actionId] = Rpoints + discountRate * QmaxNextState
+    memory.remember(np.array([gameMap]), actionId, Rpoints, np.array([newGameMap]), False)
+    batch = memory.get_batch(model=nn, batch_size=5, gamma=0.9)
+    if batch:
+        inputs, targets = batch
+        loss += float(nn.train_on_batch(inputs, targets))
+    #print("Loss {:.4f}".format(loss))
+    # Qstate = nnoutputs[actionId]
+    # QmaxNextState = 0
+    # if not np.array_equal(mouseState[0], newMouseState):
+    #     QmaxNextState = nn.predict(np.array([newGameMap])).max()    #nn.feed_forward(newMouseState)
+    #         #QmaxNextState = np.array(nn.output_layer.get_outputs()).max()
+    # Qtargets = nnoutputs
+    # Qtargets[actionId] = Rpoints + discountRate * QmaxNextState
 
-    target_error = float(nn.train_on_batch(np.array([gameMap]), np.array([Qtargets])))    #target_error = nn.train(mouseState, Qtargets)
+    #target_error = float(nn.train_on_batch(np.array([gameMap]), np.array([Qtargets])))    #target_error = nn.train(mouseState, Qtargets)
     gameMap = newGameMap
 
-    return newMouseState*20, target_error
+    return newMouseState*20, loss
 
 def evalSate(pos):
     mouseState = pos/20
@@ -130,19 +139,20 @@ def QmaxForNextState(state):
 steps = 0
 while 1:
     #pygame.time.wait(10)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT: sys.exit()
+    #for event in pygame.event.get():
+        #if event.type == pygame.QUIT: sys.exit()
 
-    mousePos, target_error = nnEvalSate(mousePos, gameMap, exploRate)
+    mousePos, target_error = nnEvalSate(mousePos, gameMap, exploRate, loss)
+    loss += target_error
     if exploRate > 0.1:
         exploRate -= 0.000001
     steps += 1
     if np.array_equal(mousePos, cheesePos):
         mousePos = np.array([100,100])
-        print steps, exploRate, target_error
+        print steps, exploRate, loss
         steps = 0
 
-    screen.fill(BLACK)
-    pygame.draw.rect(screen, cheeseColor, [cheesePos,cheeseDim])
-    pygame.draw.rect(screen, mouseColor, [mousePos,mouseDim])
-    pygame.display.flip()
+    #screen.fill(BLACK)
+    #pygame.draw.rect(screen, cheeseColor, [cheesePos,cheeseDim])
+    #pygame.draw.rect(screen, mouseColor, [mousePos,mouseDim])
+    #pygame.display.flip()
