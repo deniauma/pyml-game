@@ -19,11 +19,12 @@ game = Explo1(grid_size)
 
 
 while 1:
-    pygame.time.wait(10)
+    pygame.time.wait(100)
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit()
 
     robotPos, robotDir, state = game.getGameData()
+    print robotDir
     pos = robotPos * pixelsPerBlock
 
 
@@ -36,6 +37,7 @@ while 1:
             stopV = np.array((pixelsPerBlock, pixelsPerBlock * pixelsPerBlock)) * i
             pygame.draw.line(screen, WHITE, startH, stopH)
             pygame.draw.line(screen, WHITE, startV, stopV)
+    game.play(1)
     pygame.draw.circle(screen, RED, pos + pixelsPerBlock/2, pixelsPerBlock/2)
     startDir = pos + pixelsPerBlock/2
     stopDir = startDir + robotDir*pixelsPerBlock

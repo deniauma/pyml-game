@@ -36,8 +36,7 @@ class Explo1(Game):
         return 3
 
     def play(self, action):
-        if self._actions[action] == "GO_STRAIGHT":
-            self.moveRobot(action)
+        self.moveRobot(action)
 
     @property
     def get_state(self):
@@ -48,7 +47,7 @@ class Explo1(Game):
 
     def rotateRobot(self, angle):
         theta = (angle / 180.) * np.pi
-        x, y = self._robotPos
+        x, y = self._robotDir
         xprime = x * np.cos(theta) - y * np.sin(theta)
         yprime = x * np.sin(theta) + y * np.cos(theta)
         self._robotDir = np.array((xprime, yprime))
