@@ -60,6 +60,7 @@ class Explo1(Game):
 
     def getGameData(self):
         ray_vision = self.robotRayCast()
+        self.robotRayPixels(ray_vision)
         return self._robotPos, self._robotDir, self._state, ray_vision
 
     def rotateRobot(self, angle):
@@ -108,6 +109,16 @@ class Explo1(Game):
 
         ray = [source, ray_triangle_left, ray_triangle_right]  #pygame.draw.polygon(screen, black, [[100, 100], [0, 200], [200, 200]], 5)
         return ray
+
+    def robotRayPixels(self, ray):
+        map_pixels = np.zeros((self.grid_size*self.pixelsPerBlock, self.grid_size*self.pixelsPerBlock))
+        for i in range(self.grid_size):
+            for j in range(self.grid_size):
+                if self._state[i][j] == 1:
+                    for k in range(self.pixelsPerBlock):
+                        for v in range(self.pixelsPerBlock):
+                            map_pixels[i*self.pixelsPerBlock+k][j*self.pixelsPerBlock+v] = 1
+                            print i+k, j+v
 
     def normalize(self, v):
         norm = np.linalg.norm(v)
