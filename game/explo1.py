@@ -12,10 +12,16 @@ class Explo1(Game):
         self._actions[0] = "GO_STRAIGHT"
         self._actions[1] = "TURN_LEFT"
         self._actions[2] = "TURN_RIGHT"
+        self._rewards = np.zeros(3)
+        self._rewards[0] = 0.02
+        self._rewards[1] = -0.01
+        self._rewards[2] = -0.01
+        self._collision_reward = -1
         self._robotPos = np.array((1, 5)) * pixelsPerBlock
         self._robotDir = np.array((0, -1))
         self._robotSpeed = 0.1 * pixelsPerBlock
-        self._visionDistance = 3.
+        self._visionDistance = 3
+        self._fov = 50
         self.reset()
 
     def reset(self):
@@ -46,14 +52,15 @@ class Explo1(Game):
         return 3
 
     def play(self, action):
-        self.moveRobot(action)
+        return self.moveRobot(action)
 
     @property
     def get_state(self):
         return self._state
 
     def getGameData(self):
-        return self._robotPos, self._robotDir, self._state
+        ray_vision = self.robotRayCast()
+        return self._robotPos, self._robotDir, self._state, ray_vision
 
     def rotateRobot(self, angle):
         theta = (angle / 180.) * np.pi
@@ -79,9 +86,38 @@ class Explo1(Game):
         if self._actions[action] == "GO_STRAIGHT":
             move = self._robotDir * int(self._robotSpeed)
         elif self._actions[action] == "TURN_LEFT":
-            self.rotateRobot(10)
-        elif self._actions[action] == "TURN_RIGHT":
             self.rotateRobot(-10)
+        elif self._actions[action] == "TURN_RIGHT":
+            self.rotateRobot(10)
 
         if self.checkNoCollision(move):
             self._robotPos += move.astype(int)
+            return self._collision_reward
+
+        return self._rewards[action]
+
+    def robotRayCast(self):
+        distance = self._visionDistance * self.pixelsPerBlock
+        right_dist = distance * np.tan(np.radians(self._fov/2))
+        self._robotDir = self.normalize(self._robotDir)
+        perpen_dir_right = self.rotate(self._robotDir, 90)
+        perpen_dir_left = self.rotate(self._robotDir, -90)
+        source = self._robotPos + self.pixelsPerBlock/2
+        ray_triangle_right = (source + self._robotDir * distance) + perpen_dir_right * right_dist
+        ray_triangle_left = (source + self._robotDir * distance) + perpen_dir_left * right_dist
+
+        ray = [source, ray_triangle_left, ray_triangle_right]  #pygame.draw.polygon(screen, black, [[100, 100], [0, 200], [200, 200]], 5)
+        return ray
+
+    def normalize(self, v):
+        norm = np.linalg.norm(v)
+        if norm == 0:
+            return v
+        return v / norm
+
+    def rotate(self, vector, angle):
+        theta = (angle / 180.) * np.pi
+        x, y = vector
+        xprime = x * np.cos(theta) - y * np.sin(theta)
+        yprime = x * np.sin(theta) + y * np.cos(theta)
+        return np.array((xprime, yprime))

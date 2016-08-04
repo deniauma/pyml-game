@@ -1,6 +1,10 @@
-import sys, pygame, random, math
+import sys, pygame, random
 import numpy as np
 from game import Explo1
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Flatten
+from keras.optimizers import sgd
+from qlearning import ExperienceReplay
 
 pygame.init()
 
@@ -12,6 +16,7 @@ BLACK = 0, 0, 0
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
+RAY = (0, 255, 0)
 
 displayGrid = True
 
@@ -36,13 +41,16 @@ def drawMap(map):
                 dim = [pixelsPerBlock, pixelsPerBlock]
                 pygame.draw.rect(screen, YELLOW, [start, dim])
 
+def drawRay(ray):
+    pygame.draw.polygon(screen, RAY, ray, 1)
+
 
 while 1:
     pygame.time.wait(100)
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit()
 
-    robotPos, robotDir, state = game.getGameData()
+    robotPos, robotDir, state, ray_vision = game.getGameData()
     # pos = np.array((0,0))
     # pos[0] = int(robotPos[0] * pixelsPerBlock)
     # pos[1] = int(robotPos[1] * pixelsPerBlock)
@@ -51,10 +59,11 @@ while 1:
     if displayGrid:
         drawGrid(grid_size, pixelsPerBlock)
     drawMap(state)
-    game.play(random.randrange(3))
+    #reward = game.play(1)
     pygame.draw.circle(screen, RED, robotPos + pixelsPerBlock/2, pixelsPerBlock/2)
     startDir = robotPos + pixelsPerBlock/2
     stopDir = startDir + robotDir*pixelsPerBlock
     pygame.draw.line(screen, RED, startDir, stopDir)
+    drawRay(ray_vision)
     pygame.display.flip()
 
