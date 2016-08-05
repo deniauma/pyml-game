@@ -17,7 +17,7 @@ class Explo1(Game):
         self._rewards[1] = -0.01
         self._rewards[2] = -0.01
         self._collision_reward = -1
-        self._robotPos = np.array((8, 1)) * pixelsPerBlock
+        self._robotPos = np.array((2, 5)) * pixelsPerBlock
         self._robotDir = np.array((0, -1))
         self._robotSpeed = 0.1 * pixelsPerBlock
         self._visionDistance = 3
@@ -93,9 +93,10 @@ class Explo1(Game):
 
         if self.checkNoCollision(move):
             self._robotPos += move.astype(int)
-            return self._collision_reward
+            return self._rewards[action]
 
-        return self._rewards[action]
+        return self._collision_reward
+
 
     def robotRayCast(self):
         distance = self._visionDistance * self.pixelsPerBlock
