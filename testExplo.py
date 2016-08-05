@@ -41,8 +41,8 @@ def drawMap(map):
                 dim = [pixelsPerBlock, pixelsPerBlock]
                 pygame.draw.rect(screen, YELLOW, [start, dim])
 
-def drawRay(ray):
-    pygame.draw.polygon(screen, RAY, ray, 1)
+def drawRay(surface, ray):
+    pygame.draw.polygon(surface, BLACK, ray, 0)
 
 
 while 1:
@@ -59,11 +59,14 @@ while 1:
     if displayGrid:
         drawGrid(grid_size, pixelsPerBlock)
     drawMap(state)
-    #reward = game.play(1)
+    reward = game.play(1)
     pygame.draw.circle(screen, RED, robotPos + pixelsPerBlock/2, pixelsPerBlock/2)
     startDir = robotPos + pixelsPerBlock/2
     stopDir = startDir + robotDir*pixelsPerBlock
     pygame.draw.line(screen, RED, startDir, stopDir)
-    drawRay(ray_vision)
+    light = pygame.Surface((grid_size * pixelsPerBlock, grid_size * pixelsPerBlock))
+    light.fill(pygame.color.Color('Grey'))
+    drawRay(light, ray_vision)
+    screen.blit(light, (0, 0), special_flags=pygame.BLEND_RGBA_SUB)
     pygame.display.flip()
 

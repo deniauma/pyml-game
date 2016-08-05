@@ -1,5 +1,5 @@
 import numpy as np
-import pygame
+import pygame, math
 from game import Game
 
 
@@ -60,7 +60,7 @@ class Explo1(Game):
 
     def getGameData(self):
         ray_vision = self.robotRayCast()
-        self.robotRayPixels(ray_vision)
+        # self.robotRayPixels(ray_vision)
         return self._robotPos, self._robotDir, self._state, ray_vision
 
     def rotateRobot(self, angle):
@@ -118,7 +118,9 @@ class Explo1(Game):
                     for k in range(self.pixelsPerBlock):
                         for v in range(self.pixelsPerBlock):
                             map_pixels[i*self.pixelsPerBlock+k][j*self.pixelsPerBlock+v] = 1
-                            print i+k, j+v
+        dist = math.hypot(ray[2][0] - ray[1][0], ray[2][1] - ray[1][1])
+        ray_rect = np.zeros((dist, self._visionDistance * self.pixelsPerBlock)).fill(-1)
+
 
     def normalize(self, v):
         norm = np.linalg.norm(v)
